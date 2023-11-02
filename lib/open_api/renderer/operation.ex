@@ -132,7 +132,7 @@ defmodule OpenAPI.Renderer.Operation do
 
     path_parameter_arguments =
       for %Param{name: name} <- path_params do
-        {String.to_atom(name), [], nil}
+        {Util.to_snake_case_atom(name), [], nil}
       end
 
     body_argument = unless length(request_body) == 0, do: quote(do: body)
@@ -165,7 +165,7 @@ defmodule OpenAPI.Renderer.Operation do
       params =
         query_params
         |> Enum.sort_by(& &1.name)
-        |> Enum.map(fn %Param{name: name} -> String.to_atom(name) end)
+        |> Enum.map(fn %Param{name: name} -> Util.to_snake_case_atom(name) end)
 
       quote do
         query = Keyword.take(opts, unquote(params))
@@ -188,8 +188,7 @@ defmodule OpenAPI.Renderer.Operation do
 
     path_param_args =
       for %Param{name: name} <- path_params do
-        arg_as_atom = String.to_atom(name)
-        {arg_as_atom, {arg_as_atom, [], nil}}
+        {String.to_atom(name), {Util.to_snake_case_atom(name), [], nil}}
       end
 
     body_arg = unless length(request_body) == 0, do: {:body, {:body, [], nil}}
@@ -212,7 +211,12 @@ defmodule OpenAPI.Renderer.Operation do
       end
 
     url =
-      String.replace(request_path, ~r/\{([[:word:]]+)\}/, "#\{\\1\}")
+      String.replace(request_path, ~r/\{([^\}]+)\}/, fn match ->
+        # Remove the curly braces
+        content = String.slice(match, 1..-2)
+        formatted_content = Util.to_snake_case(content)
+        "#\{#{formatted_content}\}"
+      end)
       |> then(&"\"#{&1}\"")
       |> Code.string_to_quoted!()
       |> then(fn url ->

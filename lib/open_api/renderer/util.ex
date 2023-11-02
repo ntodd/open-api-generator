@@ -325,6 +325,29 @@ defmodule OpenAPI.Renderer.Util do
     |> List.flatten()
   end
 
+  @doc """
+  Convert a string to snake case
+
+  Required to handle cases where the schema name is not a valid atom, e.g. "getUser-id"
+  """
+  @spec to_snake_case(String.t()) :: String.t()
+  def to_snake_case(str) when is_binary(str) do
+    str
+    |> String.replace(~r/([a-z0-9])([A-Z])/, "\\1_\\2")
+    |> String.replace(~r/[-\s]/, "_")
+    |> String.downcase()
+  end
+
+  @doc"""
+  Returns the atom form of the snake-cased string
+  """
+  @spec to_snake_case_atom(String.t()) :: atom()
+  def to_snake_case_atom(str) when is_binary(str) do
+    str
+    |> to_snake_case()
+    |> String.to_atom()
+  end
+
   @spec should_appear_in_this_order?(Type.t(), Type.t()) :: boolean
   defp should_appear_in_this_order?(_, nil), do: false
   defp should_appear_in_this_order?(_, :null), do: false

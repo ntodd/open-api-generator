@@ -29,6 +29,12 @@ defmodule OpenAPI.Processor.NamingTest do
       spec = %OperationSpec{operation_id: "get-/crm/v3/objects/companies/{companyId}_getById"}
       assert Naming.operation_function(state, spec) == :company_id_get_by_id
     end
+
+    test "handles dashes in the identifier", %{state: state} do
+      Application.put_env(:oapi_generator, @profile, [])
+      spec = %OperationSpec{operation_id: "get-/crm/v3/objects/companies/{companyId}_getBy-id"}
+      assert Naming.operation_function(state, spec) == :company_id_get_by_id
+    end
   end
 
   describe "operation_modules/2" do
